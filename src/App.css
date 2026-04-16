@@ -1,1 +1,18 @@
 @import "tailwindcss";
+/* Definimos la clase para el scroll discreto */
+.pokedex-scroll::-webkit-scrollbar {
+  height: 4px; /* Grosor de la barra */
+}
+
+.pokedex-scroll::-webkit-scrollbar-track {
+  background: transparent; /* Fondo invisible para que no ensucie */
+}
+
+.pokedex-scroll::-webkit-scrollbar-thumb {
+  background: #164e63; /* Color Cyan-900 (discreto) */
+  border-radius: 10px;
+}
+
+.pokedex-scroll::-webkit-scrollbar-thumb:hover {
+  background: #0891b2; /* Color Cyan-600 (brilla al tocarlo) */
+}
