@@ -137,7 +137,6 @@ const Pokedex = () => {
     if (id === 0) setActiveTab('stats');
     if (id === 1) setActiveTab('abilities');
     if (id === 2) setActiveTab('data');
-    
   };
 
   const fetchAbilityDescription = async (url) => {
@@ -152,10 +151,47 @@ const Pokedex = () => {
     }
   };
 
+  const colorType = (type) => {
+    switch(type) {
+      case "normal": return "bg-gray-400";
+      case "fire": return "bg-red-500";
+      case "water": return "bg-blue-500";
+      case "electric": return "bg-yellow-500";
+      case "grass": return "bg-green-500";
+      case "ice": return "bg-cyan-500";
+      case "fighting": return "bg-red-700";
+      case "poison": return "bg-purple-500";
+      case "ground": return "bg-yellow-700";
+      case "flying": return "bg-indigo-500";
+      case "psychic": return "bg-pink-500";
+      case "bug": return "bg-lime-500";
+      case "rock": return "bg-yellow-800";
+      case "ghost": return "bg-purple-700";
+      case "dragon": return "bg-indigo-700";
+      case "dark": return "bg-gray-800";
+      case "steel": return "bg-gray-600";
+      default: return "bg-gray-400";
+    }
+  };
+
+  const calculateStatRange = (base, statName) => {
+    if (statName === 'hp') {
+      const min = base * 2 + 110;
+      const max = base * 2 + 204;
+      return { min, max };
+    } else {
+      // Mínimo: IV 0, EV 0, Naturaleza -10%
+      const min = Math.floor((base * 2 + 5) * 0.9);
+      // Máximo: IV 31, EV 252, Naturaleza +10%
+      const max = Math.floor((base * 2 + 31 + Math.floor(252 / 4) + 5) * 1.1);
+      return { min, max };
+    }
+  };
+
   if (!pokemon) return null;
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 to-black flex items-center justify-center p-4">
+    <div className="bg-slate-950 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 to-black flex items-center justify-center p-4">
       
       {/* PANEL IZQUIERDO: La Carcasa Clásica */}
       <div className="relative w-96 h-[550px] bg-red-600 rounded-l-3xl border-8 border-red-800 shadow-[20px_20px_60px_rgba(0,0,0,0.8),inset_-10px_-10px_20px_rgba(0,0,0,0.5)] p-6 flex flex-col z-10">
@@ -265,13 +301,13 @@ const Pokedex = () => {
       </div>
 
       {/* BISAGRA */}
-      <div className="hidden md:block w-10 h-[480px] bg-gradient-to-r from-red-900 via-red-600 to-red-900 border-y-8 border-red-950 shadow-2xl"></div>
+      <div className="hidden md:block w-10 h-[500px] bg-gradient-to-r from-red-900 via-red-600 to-red-900 border-y-8 border-red-950 shadow-2xl"></div>
 
       {/* PANEL DERECHO: Pantalla de Datos High-Tech */}
-      <div className="w-80 h-[450px] bg-red-600 rounded-r-3xl border-8 border-red-800 shadow-[inset_10px_-10px_20px_rgba(0,0,0,0.5)] p-6 flex flex-col justify-between overflow-hidden">
+      <div className="w-90 h-[475px] bg-red-600 rounded-r-3xl border-8 border-red-800 shadow-[inset_10px_-10px_20px_rgba(0,0,0,0.5)] p-6 flex flex-col justify-between overflow-hidden">
         
         {/* Pantalla de Stats Tecno */}
-        <div className="bg-slate-950 border-2 border-cyan-900 rounded-md p-4 relative overflow-hidden">
+        <div className="h-[310px] bg-slate-950 border-2 border-cyan-900 rounded-md p-4 relative overflow-y-auto overflow-x-hidden pokedex-scroll">
             {/* Glow de fondo */}
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/10 blur-3xl"></div>
             {/* Contenedor del nombre con scroll automático si no cabe */}
@@ -286,51 +322,38 @@ const Pokedex = () => {
 
             <div className="space-y-2 text-[10px] text-cyan-400">
               {activeTab === 'stats' && (
-                pokemon?.stats?.map(s => (
-                  <div key={s.stat.name} className="flex flex-col">
-                    <div className="flex justify-between mb-1 uppercase">
-                      <span>{s.stat.name}</span>
-                      <span>{s.base_stat}</span>
-                    </div>
-                    <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden border border-cyan-900/30">
-                      <div 
-                        className={`${statsColor(s.base_stat)} h-full shadow-[0_0_8px_#22d3ee] transition-all duration-1000`}
-                        style={{ width: `${(s.base_stat / 255) * 100}%` }}
-                      ></div>
-                    </div>
+                <div className="flex flex-col gap-2">
+                  {pokemon?.stats?.map(s => {
+                    const { min, max } = calculateStatRange(s.base_stat, s.stat.name);
+                    return (
+                      <div key={s.stat.name} className="flex flex-col mb-0">
+                        <div className="flex justify-between items-end uppercase">
+                          <span className="text-cyan-400 ">{s.stat.name.replace('-', ' ')}</span>
+                          <div className="flex gap-2 items-baseline">
+                            
+                            <span className="text-[8px] text-red-500">MIN: {min}</span>
+                            <span className="text-[8px] text-green-500">MAX: {max}</span>
+                            <span className="text-cyan-400 text-xs">{s.base_stat}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Tu barra de progreso actual */}
+                        <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden border border-cyan-900/30 mt-1">
+                          <div 
+                            className={`${statsColor(s.base_stat)} h-full shadow-[0_0_8px_#22d3ee] transition-all duration-1000`}
+                            style={{ width: `${(s.base_stat / 255) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="flex justify-between items-end uppercase">
+                    TOTAL <span className="text-cyan-500 font-bold text-xs">{pokemon.stats.reduce((acc, s) => acc + s.base_stat, 0)}</span>
                   </div>
-                ))
+                </div>
               )}
               {activeTab === 'abilities' && (
                 <div className="flex flex-col gap-2">
-                  <h3 className="text-cyan-600 font-bold border-b border-cyan-900/30 pb-1 italic">HABILIDADES:</h3>
-                  {pokemon?.abilities?.map(a => (
-                    <div key={a.ability.name} className="flex flex-col">
-                      <button 
-                        onClick={() => {
-                          setSelectedAbility(a.ability.name);
-                          fetchAbilityDescription(a.ability.url);
-                        }}
-                        className={`text-left uppercase p-1 rounded transition-colors ${selectedAbility === a.ability.name ? 'bg-cyan-900 text-white' : 'hover:bg-cyan-950 text-cyan-400'}`}
-                      >
-                        {a.is_hidden && <span className="text-[8px] text-red-500 mr-1">[H]</span>}
-                        {a.ability.name.replace("-", " ")}
-                      </button>
-                      
-                      {/* Descripción desplegable si está seleccionada */}
-                      {selectedAbility === a.ability.name && (
-                        <div className="p-2 mt-1 bg-black/40 rounded border border-cyan-900/50 text-[9px] leading-tight text-cyan-200 animate-in fade-in slide-in-from-top-1">
-                          {abilityDescription || "Cargando..."}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {activeTab === 'data' && species && (
-                <div className="flex flex-col gap-3 animate-in fade-in duration-500">
-                  <h3 className="text-cyan-600 font-bold border-b border-cyan-900/30 pb-1 italic">POKÉDEX DATA:</h3>
-                  
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-[10px]">
                     
                     {/* TIPOS */}
@@ -338,7 +361,7 @@ const Pokedex = () => {
                       <span className="text-cyan-800 uppercase font-bold">Types</span>
                       <div className="flex gap-1">
                         {pokemon.types.map(t => (
-                          <span key={t.type.name} className="px-2 py-0.5 bg-cyan-900/30 border border-cyan-700/50 rounded text-cyan-300 uppercase text-[8px]">
+                          <span key={t.type.name} className={`px-2 py-0.5 ${colorType(t.type.name)} border border-cyan-700/50 rounded text-cyan-300 uppercase text-[8px]`}>
                             {t.type.name}
                           </span>
                         ))}
@@ -364,20 +387,8 @@ const Pokedex = () => {
                       )}
                     </div>
 
-                    {/* GRUPOS HUEVO DINÁMICOS */}
-                    <div className="flex flex-col gap-1">
-                      <span className="text-cyan-800 uppercase font-bold">Egg Groups</span>
-                      <div className="flex flex-wrap gap-1">
-                        {species?.egg_groups?.map(group => (
-                          <span key={group.name} className="text-cyan-400 uppercase italic">
-                            {group.name}{" "}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
                     {/* ESPECIE (Categoría) */}
-                    <div className="flex flex-col gap-1 col-span-2">
+                    <div className="flex flex-col gap-2 col-span-1">
                       <span className="text-cyan-800 uppercase font-bold">Category</span>
                       <span className="text-cyan-300 italic">
                         {species?.genera?.find(g => g.language.name === "es")?.genus || 
@@ -385,6 +396,92 @@ const Pokedex = () => {
                       </span>
                     </div>
 
+                  </div>
+                  <span className="text-cyan-800 uppercase font-bold">Abilities</span>
+                  {pokemon?.abilities?.map(a => (
+                    <div key={a.ability.name} className="flex flex-col">
+                      <button 
+                        onClick={() => {
+                          setSelectedAbility(a.ability.name);
+                          fetchAbilityDescription(a.ability.url);
+                        }}
+                        className={`text-left uppercase p-1 rounded transition-colors ${selectedAbility === a.ability.name ? 'bg-cyan-900 text-white' : 'hover:bg-cyan-950 text-cyan-400'}`}
+                      >
+                        {a.is_hidden && <span className="text-[8px] text-red-500 mr-1">[H]</span>}
+                        {a.ability.name.replace("-", " ")}
+                      </button>
+                      
+                      {/* Descripción desplegable si está seleccionada */}
+                      {selectedAbility === a.ability.name && (
+                        <div className="p-2 mt-1 bg-black/40 rounded border border-cyan-900/50 text-[9px] leading-tight text-cyan-200 animate-in fade-in slide-in-from-top-1">
+                          {abilityDescription || "Cargando..."}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {activeTab === 'data' && species && (
+                <div className="flex flex-col gap-3 animate-in fade-in duration-500">
+                  
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-[10px]">
+
+                    {/* EV YIELD */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-cyan-800 uppercase font-bold">EV Yield</span>
+                      <div className="flex flex-col text-cyan-400 font-mono">
+                        {pokemon?.stats
+                          .filter(s => s.effort > 0)
+                          .map(s => 
+                            <span key={s.stat.name}>
+                              +{s.effort} {s.stat.name.replace("special-", "sp. ")}
+                            </span>
+                          )
+                        } 
+                      </div>
+                    </div>
+
+                    {/* RATIO DE CAPTURA */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-cyan-800 uppercase font-bold">Capture Rate</span>
+                      <span className="text-cyan-400 font-mono">{species.capture_rate}</span>
+                    </div>
+
+                    {/* EXP BASE */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-cyan-800 uppercase font-bold">Base EXP</span>
+                      <span className="text-cyan-400 font-mono">{pokemon.base_experience}</span>
+                    </div>
+
+                    {/* BASE FRIENDSHIP */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-cyan-800 uppercase font-bold">Base Friendship</span>
+                      <span className="text-cyan-400 font-mono">{species.base_happiness}</span>
+                    </div>
+
+                    {/* GROWTH RATE */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-cyan-800 uppercase font-bold">Growth Rate</span>
+                      <span className="text-cyan-400 font-mono">{species.growth_rate?.name.replace("-", " ")}</span>
+                    </div>
+
+                    {/* EGG GROUPS */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-cyan-800 uppercase font-bold">Egg Groups</span>
+                      <div className="flex flex-col text-cyan-400 font-mono">
+                        {species?.egg_groups?.map(group => (
+                          <span key={group.name} className="text-cyan-400 uppercase italic">
+                            {group.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* EGG CYCLES */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-cyan-800 uppercase font-bold">Egg Cycles</span>
+                      <span className="text-cyan-400 font-mono">{species.hatch_counter}</span>
+                    </div>
                   </div>
 
                   
